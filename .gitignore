@@ -46,3 +46,7 @@ vite-*.log
 
 # vite build output
 dist/
+
+# generated SEO files
+sitemap.xml
+robots.txt

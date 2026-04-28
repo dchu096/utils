@@ -126,31 +126,6 @@ const TOOL_GROUPS: ToolGroup[] = [
     ],
   },
   {
-    title: "Minecraft",
-    description: "Formatting helpers for server and chat presentation.",
-    tools: [
-      {
-        id: "motd-generator",
-        label: "MOTD Generator",
-        description: "Build Minecraft server list MOTDs with preview and export formats.",
-        route: "/mcmotd",
-        component: MotdGenerator,
-        metaDescription:
-          "Generate Minecraft MOTDs with live preview, legacy formatting, and MiniMessage output.",
-      },
-      {
-        id: "minimessage-previewer",
-        label: "MiniMessage Previewer",
-        description: "Preview styled MiniMessage syntax and formatting output.",
-      },
-      {
-        id: "minecraft-gradient-text-generator",
-        label: "Minecraft Gradient Text Generator",
-        description: "Generate colorized gradient output for Minecraft text.",
-      },
-    ],
-  },
-  {
     title: "Validators",
     description: "Validation and normalization tools for common config formats.",
     tools: [
@@ -202,6 +177,31 @@ const TOOL_GROUPS: ToolGroup[] = [
         id: "discord-embed-builder",
         label: "Discord Embed Builder",
         description: "Assemble embeds with live structure previews.",
+      },
+    ],
+  },
+  {
+    title: "Minecraft",
+    description: "Formatting helpers for server and chat presentation.",
+    tools: [
+      {
+        id: "motd-generator",
+        label: "MOTD Generator",
+        description: "Build Minecraft server list MOTDs with preview and export formats.",
+        route: "/mcmotd",
+        component: MotdGenerator,
+        metaDescription:
+          "Generate Minecraft MOTDs with live preview, legacy formatting, and MiniMessage output.",
+      },
+      {
+        id: "minimessage-previewer",
+        label: "MiniMessage Previewer",
+        description: "Preview styled MiniMessage syntax and formatting output.",
+      },
+      {
+        id: "minecraft-gradient-text-generator",
+        label: "Minecraft Gradient Text Generator",
+        description: "Generate colorized gradient output for Minecraft text.",
       },
     ],
   },

@@ -9,6 +9,7 @@ import JwtDecoder from "./components/JwtDecoder";
 import MarkdownPreviewer from "./components/MarkdownPreviewer";
 import MotdGenerator from "./components/MotdGenerator";
 import RegexTester from "./components/RegexTester";
+import SshKeyGenerator from "./components/SshKeyGenerator";
 import TimestampGenerator from "./components/TimestampGenerator";
 import TomlValidator from "./components/TomlValidator";
 import UuidGenerator from "./components/UuidGenerator";
@@ -65,6 +66,15 @@ const TOOL_GROUPS: ToolGroup[] = [
         component: UuidGenerator,
         metaDescription:
           "Generate UUID v4 values, copy them in batches, and inspect UUID version and variant fields.",
+      },
+      {
+        id: "ssh-key-generator",
+        label: "SSH Key Generator",
+        description: "Generate browser-based RSA SSH key pairs and copy the outputs.",
+        route: "/encoding/ssh-key",
+        component: SshKeyGenerator,
+        metaDescription:
+          "Generate RSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key as PEM.",
       },
     ],
   },

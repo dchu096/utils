@@ -9,6 +9,7 @@ export default defineConfig({
                 home: "index.html",
                 encodingBase64Url: "encoding/base64-url/index.html",
                 encodingJwt: "encoding/jwt/index.html",
+                encodingSshKey: "encoding/ssh-key/index.html",
                 encodingUuid: "encoding/uuid/index.html",
                 cron: "cron/index.html",
                 discordTimestamp: "discord-timestamp/index.html",

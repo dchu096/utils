@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { addMinutes, parseDateTimeLocal, toDateTimeLocalValue } from "../utils/dateTime";
 
 type DiscordStyle = {
   description: string;
@@ -16,40 +17,6 @@ const DISCORD_STYLES: DiscordStyle[] = [
   { style: "F", label: "Long Date/Time", description: "Weekday, full date, and time." },
   { style: "R", label: "Relative Time", description: "Relative output like in 2 hours." },
 ];
-
-function pad(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-function toDateTimeLocalValue(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function addMinutes(date: Date, minutes: number): Date {
-  return new Date(date.getTime() + minutes * 60_000);
-}
-
-function parseDateTimeLocal(value: string): Date | null {
-  const match =
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
-
-  if (!match) {
-    return null;
-  }
-
-  const [, year, month, day, hour, minute] = match;
-  const parsed = new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    0,
-    0,
-  );
-
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
 
 function formatRelativeTime(targetMs: number, nowMs: number): string {
   const diffSeconds = Math.round((targetMs - nowMs) / 1000);
@@ -156,16 +123,10 @@ export default function DiscordTimestampGenerator() {
       <section className="rounded-[24px] border border-slate-800 bg-slate-950/80 p-6 sm:p-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-cyan-300">
-                Live
-              </span>
-              <span className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                Time & Scheduling
-              </span>
-            </div>
-
-            <h2 className="mt-4 text-3xl font-semibold text-white">Discord Timestamp Generator</h2>
+            <span className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Time & Scheduling
+            </span>
+            <h1 className="mt-4 text-3xl font-semibold text-white">Discord Timestamp Generator</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
               Pick a local date and time, then copy the Discord timestamp tag format you need.
               Previews update in your current timezone so you can confirm the output before

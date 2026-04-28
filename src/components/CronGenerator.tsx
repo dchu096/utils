@@ -396,9 +396,12 @@ export default function CronGenerator() {
         <section className="rounded-[24px] border border-slate-800 bg-slate-950/80 p-6 sm:p-8">
           <header className="mx-auto flex max-w-4xl flex-col items-center gap-3 text-center">
             <div>
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">
-                Scheduling utility
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                Time & Scheduling
               </p>
+              <h1 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">
+                Cron Expression Generator
+              </h1>
               <p className="mt-3 text-base leading-7 text-slate-300">
                 Write a standard 5-part cron string and get a readable schedule back immediately.
               </p>

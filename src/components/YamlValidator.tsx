@@ -221,16 +221,8 @@ export default function YamlValidator() {
       <section className="rounded-[24px] border border-slate-800 bg-slate-950/80 p-6 sm:p-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-cyan-300">
-                Live
-              </span>
-              <span className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                Data & Encoding
-              </span>
-            </div>
-
-            <h2 className="mt-4 text-3xl font-semibold text-white">YAML Validator</h2>
+            <span className="text-xs uppercase tracking-[0.16em] text-slate-500">Validators</span>
+            <h1 className="mt-4 text-3xl font-semibold text-white">YAML Validator</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
               Validate YAML with real parser errors, inspect warnings, and export a normalized YAML
               version or JSON conversion when the document is valid.

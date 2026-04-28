@@ -1,19 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
+import Base64UrlEncoder from "./components/Base64UrlEncoder";
 import CronGenerator from "./components/CronGenerator";
 import DiscordTimestampGenerator from "./components/DiscordTimestampGenerator";
-import MotdGenerator from "./components/MotdGenerator";
+import JsonValidator from "./components/JsonValidator";
+import JwtDecoder from "./components/JwtDecoder";
+import MarkdownPreviewer from "./components/MarkdownPreviewer";
+import RegexTester from "./components/RegexTester";
+import TimestampGenerator from "./components/TimestampGenerator";
+import TomlValidator from "./components/TomlValidator";
+import UuidGenerator from "./components/UuidGenerator";
 import YamlValidator from "./components/YamlValidator";
 
 type Tool = {
   aliases?: string[];
+  component: ComponentType;
   description: string;
   id: string;
   label: string;
   metaDescription?: string;
-  route?: string;
-  status?: "live" | "planned";
+  route: string;
 };
 
 type ToolGroup = {
@@ -24,7 +31,7 @@ type ToolGroup = {
 
 const HOME_TOOL_ID = "home";
 const HOME_META_DESCRIPTION =
-  "Utility pages for validators, cron expressions, Discord timestamps, Minecraft MOTDs, and other practical formatting work.";
+  "Utility pages for validators, encoding helpers, timestamps, cron expressions, and text formatting work.";
 
 const TOOL_GROUPS: ToolGroup[] = [
   {
@@ -34,17 +41,29 @@ const TOOL_GROUPS: ToolGroup[] = [
       {
         id: "base64-url-encoder",
         label: "Base64 / URL Encoder",
-        description: "Encode and decode common transport formats.",
+        description: "Encode and decode Base64, Base64URL, and URL-safe text values.",
+        route: "/encoding/base64-url",
+        component: Base64UrlEncoder,
+        metaDescription:
+          "Encode and decode Base64, Base64URL, and URL-safe text values directly in the browser.",
       },
       {
         id: "jwt-decoder",
         label: "JWT Decoder",
-        description: "Inspect token headers and claims safely.",
+        description: "Inspect token headers and claims locally without sending them anywhere.",
+        route: "/encoding/jwt",
+        component: JwtDecoder,
+        metaDescription:
+          "Decode JWT headers and claims locally, with basic warnings for obvious token issues.",
       },
       {
         id: "uuid-generator",
         label: "UUID Generator",
-        description: "Create versioned IDs for app and infra work.",
+        description: "Generate UUID v4 values in batches and inspect pasted UUID strings.",
+        route: "/encoding/uuid",
+        component: UuidGenerator,
+        metaDescription:
+          "Generate UUID v4 values, copy them in batches, and inspect UUID version and variant fields.",
       },
     ],
   },
@@ -55,25 +74,29 @@ const TOOL_GROUPS: ToolGroup[] = [
       {
         id: "timestamp-generator",
         label: "Timestamp Generator",
-        description: "Generate Unix and ISO timestamps.",
+        description: "Generate Unix seconds, milliseconds, and ISO timestamps.",
+        route: "/time/timestamp",
+        component: TimestampGenerator,
+        metaDescription:
+          "Generate Unix seconds, Unix milliseconds, and ISO timestamps from local datetime input.",
       },
       {
         id: "discord-timestamp-generator",
         label: "Discord Timestamp Generator",
-        description: "Build Discord time tags with previews.",
+        description: "Build Discord time tags with live local previews.",
         route: "/discord-timestamp",
-        status: "live",
+        component: DiscordTimestampGenerator,
         metaDescription:
           "Generate Discord timestamp tags with live previews, Unix output, and copy-ready formats.",
       },
       {
         id: "cron-expression-generator",
         label: "Cron Expression Generator",
-        description: "Create and validate 5-part cron schedules.",
+        description: "Create and validate standard 5-part cron schedules.",
         route: "/cron",
-        status: "live",
+        component: CronGenerator,
         metaDescription:
-          "Generate, validate, and explain 5-part cron expressions with readable schedule output.",
+          "Generate, validate, and explain standard 5-part cron expressions with readable schedule output.",
       },
     ],
   },
@@ -84,17 +107,20 @@ const TOOL_GROUPS: ToolGroup[] = [
       {
         id: "markdown-previewer",
         label: "Markdown Previewer",
-        description: "Render markdown side by side.",
+        description: "Render Markdown with a live preview and inspect the generated HTML.",
+        route: "/text/markdown",
+        component: MarkdownPreviewer,
+        metaDescription:
+          "Render Markdown with a live preview, inspect generated HTML, and sanitize the preview in-browser.",
       },
       {
         id: "regex-tester",
         label: "Regex Tester",
-        description: "Test patterns against sample input.",
-      },
-      {
-        id: "announcement-formatter",
-        label: "Announcement Formatter",
-        description: "Format updates for clean posting.",
+        description: "Test JavaScript regular expressions against sample input and replacements.",
+        route: "/text/regex",
+        component: RegexTester,
+        metaDescription:
+          "Test JavaScript regular expressions against sample text, inspect matches, and preview replacements.",
       },
     ],
   },
@@ -108,69 +134,27 @@ const TOOL_GROUPS: ToolGroup[] = [
         description: "Validate YAML, inspect parser issues, and convert to JSON.",
         route: "/validators/yaml",
         aliases: ["/yaml-validator"],
-        status: "live",
+        component: YamlValidator,
         metaDescription:
           "Validate YAML with parser-backed errors, warnings, normalized output, and JSON conversion.",
       },
       {
-        id: "json-formatter",
+        id: "json-validator",
         label: "JSON Validator",
-        description: "Validate JSON and normalize formatting.",
+        description: "Validate JSON, normalize formatting, and sort object keys for stable output.",
         route: "/validators/json",
-        metaDescription: "Validate JSON, inspect parser errors, and normalize formatting.",
+        component: JsonValidator,
+        metaDescription:
+          "Validate JSON, inspect parser errors, normalize formatting, and sort object keys for stable output.",
       },
       {
         id: "toml-validator",
         label: "TOML Validator",
-        description: "Validate TOML configuration files.",
+        description: "Validate TOML configuration files and inspect their JSON structure.",
         route: "/validators/toml",
-        metaDescription: "Validate TOML and inspect parser-backed configuration errors.",
-      },
-    ],
-  },
-  {
-    title: "Design & Creative",
-    description: "Visual helpers for embeds, gradients, and assets.",
-    tools: [
-      {
-        id: "qr-code-generator",
-        label: "QR Code Generator",
-        description: "Generate QR codes from links or text.",
-      },
-      {
-        id: "css-gradient-generator",
-        label: "CSS Gradient Generator",
-        description: "Compose gradients and copy the CSS.",
-      },
-      {
-        id: "discord-embed-builder",
-        label: "Discord Embed Builder",
-        description: "Assemble embeds with live structure previews.",
-      },
-    ],
-  },
-  {
-    title: "Minecraft",
-    description: "Formatting helpers for server and chat presentation.",
-    tools: [
-      {
-        id: "motd-generator",
-        label: "MOTD Generator",
-        description: "Build Minecraft server list MOTDs with preview and export formats.",
-        route: "/mcmotd",
-        status: "live",
+        component: TomlValidator,
         metaDescription:
-          "Generate Minecraft MOTDs with live preview, legacy formatting, and MiniMessage output.",
-      },
-      {
-        id: "minimessage-previewer",
-        label: "MiniMessage Previewer",
-        description: "Preview styled message syntax.",
-      },
-      {
-        id: "minecraft-gradient-text-generator",
-        label: "Minecraft Gradient Text Generator",
-        description: "Generate colorized gradient output.",
+          "Validate TOML and inspect parser-backed configuration errors with normalized output.",
       },
     ],
   },
@@ -201,28 +185,36 @@ function getToolById(toolId: string): { group: ToolGroup; tool: Tool } | null {
   return null;
 }
 
-function getToolIdFromLocation(): string {
-  const normalizedPath = normalizePath(window.location.pathname);
+function getToolByPath(pathname: string): { group: ToolGroup; tool: Tool } | null {
+  const normalizedPath = normalizePath(pathname);
 
   for (const group of TOOL_GROUPS) {
-    const match = group.tools.find(
-      (tool) =>
-        (tool.route && normalizePath(tool.route) === normalizedPath) ||
-        tool.aliases?.some((alias) => normalizePath(alias) === normalizedPath),
+    const tool = group.tools.find(
+      (entry) =>
+        normalizePath(entry.route) === normalizedPath ||
+        entry.aliases?.some((alias) => normalizePath(alias) === normalizedPath),
     );
 
-    if (match) {
-      return match.id;
+    if (tool) {
+      return { group, tool };
     }
   }
 
-  if (normalizedPath !== "/") {
+  return null;
+}
+
+function getToolIdFromLocation(): string {
+  const matchedTool = getToolByPath(window.location.pathname);
+
+  if (matchedTool) {
+    return matchedTool.tool.id;
+  }
+
+  if (normalizePath(window.location.pathname) !== "/") {
     return HOME_TOOL_ID;
   }
 
-  const requestedToolId = new URLSearchParams(window.location.search).get("tool");
-
-  return requestedToolId && getToolById(requestedToolId) ? requestedToolId : HOME_TOOL_ID;
+  return HOME_TOOL_ID;
 }
 
 function getUrlForTool(toolId: string): string {
@@ -230,17 +222,7 @@ function getUrlForTool(toolId: string): string {
     return "/";
   }
 
-  const toolMatch = getToolById(toolId);
-
-  if (!toolMatch) {
-    return "/";
-  }
-
-  if (toolMatch.tool.route) {
-    return toolMatch.tool.route;
-  }
-
-  return `/?tool=${encodeURIComponent(toolId)}`;
+  return getToolById(toolId)?.tool.route ?? "/";
 }
 
 function setMetaTagContent(name: string, content: string): void {
@@ -295,7 +277,7 @@ function ToolDropdown({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.16 }}
-            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/98 p-2 shadow-xl shadow-slate-950/40 lg:absolute lg:left-0 lg:top-full lg:z-30 lg:w-[19rem]"
+            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/98 p-2 shadow-xl shadow-slate-950/40 lg:absolute lg:left-0 lg:top-full lg:z-30 lg:w-[20rem]"
           >
             <div className="px-3 py-2 text-xs uppercase tracking-[0.16em] text-slate-500">
               {group.title}
@@ -311,14 +293,7 @@ function ToolDropdown({
                   }}
                   className="rounded-lg px-3 py-3 text-left transition hover:bg-slate-900"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-slate-100">{tool.label}</span>
-                    {tool.status === "live" ? (
-                      <span className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-cyan-300">
-                        Live
-                      </span>
-                    ) : null}
-                  </div>
+                  <div className="text-sm font-medium text-slate-100">{tool.label}</div>
                   <p className="mt-1 text-xs leading-5 text-slate-400">{tool.description}</p>
                 </a>
               ))}
@@ -346,24 +321,11 @@ function ToolCard({
       }}
       className="rounded-xl border border-slate-800 bg-slate-950/80 px-5 py-5 text-left transition hover:border-slate-700 hover:bg-slate-900"
     >
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-white">{tool.label}</h3>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] ${
-            tool.status === "live"
-              ? "border border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
-              : "border border-slate-700 bg-slate-900 text-slate-500"
-          }`}
-        >
-          {tool.status === "live" ? "Live" : "Planned"}
-        </span>
-      </div>
+      <h3 className="text-base font-semibold text-white">{tool.label}</h3>
       <p className="mt-3 text-sm leading-6 text-slate-400">{tool.description}</p>
-      {tool.route ? (
-        <div className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-          {tool.route}
-        </div>
-      ) : null}
+      <div className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+        {tool.route}
+      </div>
     </a>
   );
 }
@@ -373,16 +335,7 @@ function HomePage({
 }: {
   onSelectTool: (toolId: string) => void;
 }) {
-  const liveTools = useMemo(
-    () =>
-      TOOL_GROUPS.flatMap((group) =>
-        group.tools.filter((tool) => tool.status === "live").map((tool) => ({
-          ...tool,
-          groupTitle: group.title,
-        })),
-      ),
-    [],
-  );
+  const allTools = useMemo(() => TOOL_GROUPS.flatMap((group) => group.tools), []);
 
   return (
     <div className="flex flex-col gap-12">
@@ -395,51 +348,48 @@ function HomePage({
             Utility pages for the work people actually do every day
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300">
-            The live tools now sit on dedicated URLs, so validators, cron expressions, Discord
-            timestamps, and Minecraft MOTDs can live as their own pages without breaking the
-            shared site shell.
+            Validators, encoding helpers, timestamps, cron tools, and text utilities now live on
+            dedicated URLs, so each page can be linked directly without a separate app shell.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="/validators/json"
+              onClick={(event) => {
+                event.preventDefault();
+                onSelectTool("json-validator");
+              }}
+              className="rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/20"
+            >
+              Open JSON validator
+            </a>
             <a
               href="/cron"
               onClick={(event) => {
                 event.preventDefault();
                 onSelectTool("cron-expression-generator");
               }}
-              className="rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/20"
-            >
-              Open cron generator
-            </a>
-            <a
-              href="/validators/yaml"
-              onClick={(event) => {
-                event.preventDefault();
-                onSelectTool("yaml-validator");
-              }}
               className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
             >
-              Open YAML validator
+              Open cron generator
             </a>
           </div>
         </div>
 
         <div className="grid gap-4">
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Live now</p>
-            <p className="mt-3 text-xl font-semibold text-white">
-              YAML validator, cron, Discord timestamp, and MOTD generators
-            </p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Available now</p>
+            <p className="mt-3 text-xl font-semibold text-white">{allTools.length} working tools</p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Each live tool now has a dedicated page path for direct linking, refresh-safe access,
-              and cleaner indexing.
+              The site now covers validation, encoding, scheduling, and text-formatting workflows
+              without placeholder entries in the active sections.
             </p>
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Live paths</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Direct paths</p>
             <div className="mt-3 grid gap-2 text-sm text-slate-300">
-              {liveTools.map((tool) => (
+              {allTools.map((tool) => (
                 <div
                   key={tool.id}
                   className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2"
@@ -469,41 +419,6 @@ function HomePage({
           </section>
         ))}
       </section>
-    </div>
-  );
-}
-
-function PlaceholderToolPage({
-  category,
-  title,
-}: {
-  category: string;
-  title: string;
-}) {
-  return (
-    <section className="rounded-[24px] border border-slate-800 bg-slate-950/80 px-6 py-10 sm:px-8">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">{category}</p>
-      <h1 className="mt-4 text-3xl font-semibold text-white">{title}</h1>
-      <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-        This tool is listed in the site shell, but the working page has not been built yet. The
-        route-safe live tools are now split into dedicated pages, so additional utilities can be
-        added without reworking the navigation again.
-      </p>
-    </section>
-  );
-}
-
-function ToolPageHeader({
-  category,
-  title,
-}: {
-  category: string;
-  title: string;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/80 px-5 py-4">
-      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{category}</p>
-      <h1 className="mt-2 text-2xl font-semibold text-white">{title}</h1>
     </div>
   );
 }
@@ -559,7 +474,7 @@ export default function App() {
       "description",
       activeTool.tool.metaDescription ?? activeTool.tool.description,
     );
-    setCanonicalHref(activeTool.tool.route ?? "/");
+    setCanonicalHref(activeTool.tool.route);
   }, [activeTool]);
 
   const navigateTo = (toolId: string): void => {
@@ -580,6 +495,8 @@ export default function App() {
     setActiveToolId(toolId);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const ActiveToolComponent = activeTool?.tool.component;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.08),_transparent_28%),linear-gradient(180deg,_#070b13_0%,_#0f172a_58%,_#111827_100%)] text-slate-100">
@@ -647,46 +564,8 @@ export default function App() {
             exit={{ opacity: 0, y: -18 }}
             transition={{ duration: 0.2 }}
           >
-            {activeToolId === HOME_TOOL_ID ? (
-              <HomePage onSelectTool={navigateTo} />
-            ) : activeTool?.tool.id === "cron-expression-generator" ? (
-              <div className="flex flex-col gap-6">
-                <ToolPageHeader
-                  category={activeTool.group.title}
-                  title={activeTool.tool.label}
-                />
-                <CronGenerator />
-              </div>
-            ) : activeTool?.tool.id === "discord-timestamp-generator" ? (
-              <div className="flex flex-col gap-6">
-                <ToolPageHeader
-                  category={activeTool.group.title}
-                  title={activeTool.tool.label}
-                />
-                <DiscordTimestampGenerator />
-              </div>
-            ) : activeTool?.tool.id === "yaml-validator" ? (
-              <div className="flex flex-col gap-6">
-                <ToolPageHeader
-                  category={activeTool.group.title}
-                  title={activeTool.tool.label}
-                />
-                <YamlValidator />
-              </div>
-            ) : activeTool?.tool.id === "motd-generator" ? (
-              <div className="flex flex-col gap-6">
-                <ToolPageHeader
-                  category={activeTool.group.title}
-                  title={activeTool.tool.label}
-                />
-                <MotdGenerator />
-              </div>
-            ) : activeTool ? (
-              <PlaceholderToolPage
-                title={activeTool.tool.label}
-                category={activeTool.group.title}
-              />
-            ) : null}
+            {activeToolId === HOME_TOOL_ID ? <HomePage onSelectTool={navigateTo} /> : null}
+            {activeToolId !== HOME_TOOL_ID && ActiveToolComponent ? <ActiveToolComponent /> : null}
           </motion.div>
         </AnimatePresence>
       </main>

@@ -43,3 +43,6 @@ next-env.d.ts
 # logs
 *.log
 vite-*.log
+
+# vite build output
+dist/

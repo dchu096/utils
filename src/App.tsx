@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import CronGenerator from "./components/CronGenerator";
 import DiscordTimestampGenerator from "./components/DiscordTimestampGenerator";
 import MotdGenerator from "./components/MotdGenerator";
+import YamlValidator from "./components/YamlValidator";
 
 type Tool = {
   description: string;
@@ -29,6 +30,15 @@ const TOOL_GROUPS: ToolGroup[] = [
     title: "Data & Encoding",
     description: "Converters and structure helpers for payload work.",
     tools: [
+      {
+        id: "yaml-validator",
+        label: "YAML Validator",
+        description: "Validate YAML, inspect parser issues, and convert to JSON.",
+        route: "/yaml-validator",
+        status: "live",
+        metaDescription:
+          "Validate YAML with parser-backed errors, warnings, normalized output, and JSON conversion.",
+      },
       {
         id: "json-formatter",
         label: "JSON Formatter",
@@ -366,8 +376,9 @@ function HomePage({
             Utility pages for the work people actually do every day
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300">
-            The live tools now sit on dedicated URLs, so cron, Discord timestamps, and Minecraft
-            MOTDs can live as their own pages without breaking the shared site shell.
+            The live tools now sit on dedicated URLs, so YAML validation, cron expressions,
+            Discord timestamps, and Minecraft MOTDs can live as their own pages without breaking
+            the shared site shell.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -382,14 +393,14 @@ function HomePage({
               Open cron generator
             </a>
             <a
-              href="/discord-timestamp"
+              href="/yaml-validator"
               onClick={(event) => {
                 event.preventDefault();
-                onSelectTool("discord-timestamp-generator");
+                onSelectTool("yaml-validator");
               }}
               className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
             >
-              Open Discord timestamps
+              Open YAML validator
             </a>
           </div>
         </div>
@@ -398,7 +409,7 @@ function HomePage({
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Live now</p>
             <p className="mt-3 text-xl font-semibold text-white">
-              Cron, Discord timestamp, and MOTD generators
+              YAML, cron, Discord timestamp, and MOTD generators
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
               Each live tool now has a dedicated page path for direct linking, refresh-safe access,
@@ -617,6 +628,14 @@ export default function App() {
                   title={activeTool.tool.label}
                 />
                 <DiscordTimestampGenerator />
+              </div>
+            ) : activeTool?.tool.id === "yaml-validator" ? (
+              <div className="flex flex-col gap-6">
+                <ToolPageHeader
+                  category={activeTool.group.title}
+                  title={activeTool.tool.label}
+                />
+                <YamlValidator />
               </div>
             ) : activeTool?.tool.id === "motd-generator" ? (
               <div className="flex flex-col gap-6">

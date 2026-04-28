@@ -11,6 +11,7 @@ export default defineConfig({
         cron: "cron/index.html",
         mcmotd: "mcmotd/index.html",
         discordTimestamp: "discord-timestamp/index.html",
+        yamlValidator: "yaml-validator/index.html",
       },
     },
   },

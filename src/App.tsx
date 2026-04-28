@@ -74,7 +74,7 @@ const TOOL_GROUPS: ToolGroup[] = [
         route: "/encoding/ssh-key",
         component: SshKeyGenerator,
         metaDescription:
-          "Generate ED25519, RSA, and ECDSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key as PEM.",
+          "Generate ED25519, RSA, and ECDSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key in OpenSSH format.",
       },
     ],
   },

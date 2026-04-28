@@ -17,7 +17,7 @@ type GeneratedKeyPair = {
   comment: string;
   createdAt: string;
   fingerprint: string;
-  privateKeyPem: string;
+  privateKeyOpenSsh: string;
   publicKeyOpenSsh: string;
   publicKeyPem: string;
   variantLabel: string;
@@ -191,6 +191,44 @@ function pemEncode(label: string, bytes: Uint8Array): string {
   return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
 }
 
+function getCheckInt(): number {
+  return window.crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+}
+
+function getPaddingLength(length: number, blockSize = 8): number {
+  const remainder = length % blockSize;
+  return remainder === 0 ? blockSize : blockSize - remainder;
+}
+
+function wrapOpenSshPrivateKey(
+  publicKeyBlob: Uint8Array,
+  privateKeyBlob: Uint8Array,
+  comment: string,
+): string {
+  const checkInt = getCheckInt();
+  const privateSectionWithoutPadding = concatBytes([
+    encodeUint32(checkInt),
+    encodeUint32(checkInt),
+    privateKeyBlob,
+    encodeSshString(comment.trim()),
+  ]);
+  const paddingLength = getPaddingLength(privateSectionWithoutPadding.length);
+  const padding = Uint8Array.from({ length: paddingLength }, (_, index) => index + 1);
+  const privateSection = concatBytes([privateSectionWithoutPadding, padding]);
+  const authMagic = new TextEncoder().encode("openssh-key-v1\0");
+  const container = concatBytes([
+    authMagic,
+    encodeSshString("none"),
+    encodeSshString("none"),
+    encodeSshString(new Uint8Array()),
+    encodeUint32(1),
+    encodeSshString(publicKeyBlob),
+    encodeSshString(privateSection),
+  ]);
+
+  return pemEncode("OPENSSH PRIVATE KEY", container);
+}
+
 async function getFingerprint(sshBlob: Uint8Array): Promise<string> {
   const fingerprintBytes = new Uint8Array(await window.crypto.subtle.digest("SHA-256", sshBlob));
   return `SHA256:${bytesToBase64(fingerprintBytes).replace(/=+$/g, "")}`;
@@ -216,34 +254,42 @@ async function generateRsaKeyPair(
     ["sign", "verify"],
   )) as CryptoKeyPair;
 
-  const [privateKeyBuffer, publicKeyBuffer, publicJwk] = await Promise.all([
-    window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey),
+  const [privateJwk, publicKeyBuffer, publicJwk] = await Promise.all([
+    window.crypto.subtle.exportKey("jwk", keyPair.privateKey) as Promise<JsonWebKey>,
     window.crypto.subtle.exportKey("spki", keyPair.publicKey),
     window.crypto.subtle.exportKey("jwk", keyPair.publicKey) as Promise<JsonWebKey>,
   ]);
 
-  if (!publicJwk.e || !publicJwk.n) {
+  if (!publicJwk.e || !publicJwk.n || !privateJwk.d || !privateJwk.p || !privateJwk.q || !privateJwk.qi) {
     throw new Error("The browser could not export the generated RSA key.");
   }
 
   const exponent = base64UrlToBytes(publicJwk.e);
   const modulus = base64UrlToBytes(publicJwk.n);
-  const sshBlob = concatBytes([
+  const publicKeyBlob = concatBytes([
     encodeSshString("ssh-rsa"),
     encodeSshMpint(exponent),
     encodeSshMpint(modulus),
   ]);
-  const trimmedComment = comment.trim();
+  const privateKeyBlob = concatBytes([
+    encodeSshString("ssh-rsa"),
+    encodeSshMpint(modulus),
+    encodeSshMpint(exponent),
+    encodeSshMpint(base64UrlToBytes(privateJwk.d)),
+    encodeSshMpint(base64UrlToBytes(privateJwk.qi)),
+    encodeSshMpint(base64UrlToBytes(privateJwk.p)),
+    encodeSshMpint(base64UrlToBytes(privateJwk.q)),
+  ]);
 
   return {
     algorithmLabel: "RSA",
     variantLabel: `RSA ${modulusLength}`,
-    comment: trimmedComment,
+    comment: comment.trim(),
     createdAt: new Date().toLocaleString(),
-    fingerprint: await getFingerprint(sshBlob),
-    publicKeyOpenSsh: `ssh-rsa ${bytesToBase64(sshBlob)}${getCommentSuffix(comment)}`,
+    fingerprint: await getFingerprint(publicKeyBlob),
+    publicKeyOpenSsh: `ssh-rsa ${bytesToBase64(publicKeyBlob)}${getCommentSuffix(comment)}`,
     publicKeyPem: pemEncode("PUBLIC KEY", new Uint8Array(publicKeyBuffer)),
-    privateKeyPem: pemEncode("PRIVATE KEY", new Uint8Array(privateKeyBuffer)),
+    privateKeyOpenSsh: wrapOpenSshPrivateKey(publicKeyBlob, privateKeyBlob, comment),
   };
 }
 
@@ -267,13 +313,13 @@ async function generateEcdsaKeyPair(
     ["sign", "verify"],
   )) as CryptoKeyPair;
 
-  const [privateKeyBuffer, publicKeyBuffer, publicJwk] = await Promise.all([
-    window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey),
+  const [privateJwk, publicKeyBuffer, publicJwk] = await Promise.all([
+    window.crypto.subtle.exportKey("jwk", keyPair.privateKey) as Promise<JsonWebKey>,
     window.crypto.subtle.exportKey("spki", keyPair.publicKey),
     window.crypto.subtle.exportKey("jwk", keyPair.publicKey) as Promise<JsonWebKey>,
   ]);
 
-  if (!publicJwk.x || !publicJwk.y) {
+  if (!publicJwk.x || !publicJwk.y || !privateJwk.d) {
     throw new Error("The browser could not export the generated ECDSA key.");
   }
 
@@ -282,22 +328,27 @@ async function generateEcdsaKeyPair(
     base64UrlToBytes(publicJwk.x),
     base64UrlToBytes(publicJwk.y),
   ]);
-  const sshBlob = concatBytes([
+  const publicKeyBlob = concatBytes([
     encodeSshString(curveInfo.sshLabel),
     encodeSshString(curveInfo.sshCurve),
     encodeSshString(point),
   ]);
-  const trimmedComment = comment.trim();
+  const privateKeyBlob = concatBytes([
+    encodeSshString(curveInfo.sshLabel),
+    encodeSshString(curveInfo.sshCurve),
+    encodeSshString(point),
+    encodeSshMpint(base64UrlToBytes(privateJwk.d)),
+  ]);
 
   return {
     algorithmLabel: "ECDSA",
     variantLabel: namedCurve,
-    comment: trimmedComment,
+    comment: comment.trim(),
     createdAt: new Date().toLocaleString(),
-    fingerprint: await getFingerprint(sshBlob),
-    publicKeyOpenSsh: `${curveInfo.sshLabel} ${bytesToBase64(sshBlob)}${getCommentSuffix(comment)}`,
+    fingerprint: await getFingerprint(publicKeyBlob),
+    publicKeyOpenSsh: `${curveInfo.sshLabel} ${bytesToBase64(publicKeyBlob)}${getCommentSuffix(comment)}`,
     publicKeyPem: pemEncode("PUBLIC KEY", new Uint8Array(publicKeyBuffer)),
-    privateKeyPem: pemEncode("PRIVATE KEY", new Uint8Array(privateKeyBuffer)),
+    privateKeyOpenSsh: wrapOpenSshPrivateKey(publicKeyBlob, privateKeyBlob, comment),
   };
 }
 
@@ -310,8 +361,8 @@ async function generateEd25519KeyPair(comment: string): Promise<GeneratedKeyPair
     ["sign", "verify"],
   )) as CryptoKeyPair;
 
-  const [privateKeyBuffer, publicKeyBuffer, rawPublicKey, publicJwk] = await Promise.all([
-    window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey),
+  const [privateJwk, publicKeyBuffer, rawPublicKey, publicJwk] = await Promise.all([
+    window.crypto.subtle.exportKey("jwk", keyPair.privateKey) as Promise<JsonWebKey>,
     window.crypto.subtle.exportKey("spki", keyPair.publicKey),
     window.crypto.subtle.exportKey("raw", keyPair.publicKey).catch(() => null),
     window.crypto.subtle.exportKey("jwk", keyPair.publicKey) as Promise<JsonWebKey>,
@@ -328,21 +379,29 @@ async function generateEd25519KeyPair(comment: string): Promise<GeneratedKeyPair
     throw new Error("The browser could not export the generated Ed25519 key.");
   }
 
-  const sshBlob = concatBytes([
+  if (!privateJwk.d) {
+    throw new Error("The browser could not export the generated Ed25519 private key.");
+  }
+
+  const publicKeyBlob = concatBytes([
     encodeSshString("ssh-ed25519"),
     encodeSshString(publicKeyBytes),
   ]);
-  const trimmedComment = comment.trim();
+  const privateKeyBlob = concatBytes([
+    encodeSshString("ssh-ed25519"),
+    encodeSshString(publicKeyBytes),
+    encodeSshString(concatBytes([base64UrlToBytes(privateJwk.d), publicKeyBytes])),
+  ]);
 
   return {
     algorithmLabel: "ED25519",
     variantLabel: "Ed25519",
-    comment: trimmedComment,
+    comment: comment.trim(),
     createdAt: new Date().toLocaleString(),
-    fingerprint: await getFingerprint(sshBlob),
-    publicKeyOpenSsh: `ssh-ed25519 ${bytesToBase64(sshBlob)}${getCommentSuffix(comment)}`,
+    fingerprint: await getFingerprint(publicKeyBlob),
+    publicKeyOpenSsh: `ssh-ed25519 ${bytesToBase64(publicKeyBlob)}${getCommentSuffix(comment)}`,
     publicKeyPem: pemEncode("PUBLIC KEY", new Uint8Array(publicKeyBuffer)),
-    privateKeyPem: pemEncode("PRIVATE KEY", new Uint8Array(privateKeyBuffer)),
+    privateKeyOpenSsh: wrapOpenSshPrivateKey(publicKeyBlob, privateKeyBlob, comment),
   };
 }
 
@@ -620,7 +679,7 @@ export default function SshKeyGenerator() {
             <div className={cardClass}>
               <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Private key format</div>
               <div className="mt-2 text-sm leading-6 text-slate-300">
-                Private keys are exported as PKCS#8 PEM for immediate copy and storage.
+                Private keys are exported in OpenSSH format for direct use with ssh, ssh-add, and ssh-keygen.
               </div>
             </div>
 
@@ -673,17 +732,17 @@ export default function SshKeyGenerator() {
             <section className={primaryPanelClass}>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">Private key</h2>
+                  <h2 className="text-lg font-semibold text-white">OpenSSH private key</h2>
                   <p className="mt-2 text-sm text-slate-400">
                     Copy and store this now. It is not kept after refresh.
                   </p>
                 </div>
-                <CopyButton label="Private key" value={generationState.result.privateKeyPem} />
+                <CopyButton label="OpenSSH private key" value={generationState.result.privateKeyOpenSsh} />
               </div>
 
               <ToolTextarea
                 readOnly
-                value={generationState.result.privateKeyPem}
+                value={generationState.result.privateKeyOpenSsh}
                 rows={20}
                 spellCheck={false}
               />

@@ -28,36 +28,6 @@ const HOME_META_DESCRIPTION =
 
 const TOOL_GROUPS: ToolGroup[] = [
   {
-    title: "Validators",
-    description: "Validation and normalization tools for common config formats.",
-    tools: [
-      {
-        id: "yaml-validator",
-        label: "YAML Validator",
-        description: "Validate YAML, inspect parser issues, and convert to JSON.",
-        route: "/validators/yaml",
-        aliases: ["/yaml-validator"],
-        status: "live",
-        metaDescription:
-          "Validate YAML with parser-backed errors, warnings, normalized output, and JSON conversion.",
-      },
-      {
-        id: "json-formatter",
-        label: "JSON Validator",
-        description: "Validate JSON and normalize formatting.",
-        route: "/validators/json",
-        metaDescription: "Validate JSON, inspect parser errors, and normalize formatting.",
-      },
-      {
-        id: "toml-validator",
-        label: "TOML Validator",
-        description: "Validate TOML configuration files.",
-        route: "/validators/toml",
-        metaDescription: "Validate TOML and inspect parser-backed configuration errors.",
-      },
-    ],
-  },
-  {
     title: "Data & Encoding",
     description: "Converters, token tools, and ID helpers for payload work.",
     tools: [
@@ -125,6 +95,36 @@ const TOOL_GROUPS: ToolGroup[] = [
         id: "announcement-formatter",
         label: "Announcement Formatter",
         description: "Format updates for clean posting.",
+      },
+    ],
+  },
+  {
+    title: "Validators",
+    description: "Validation and normalization tools for common config formats.",
+    tools: [
+      {
+        id: "yaml-validator",
+        label: "YAML Validator",
+        description: "Validate YAML, inspect parser issues, and convert to JSON.",
+        route: "/validators/yaml",
+        aliases: ["/yaml-validator"],
+        status: "live",
+        metaDescription:
+          "Validate YAML with parser-backed errors, warnings, normalized output, and JSON conversion.",
+      },
+      {
+        id: "json-formatter",
+        label: "JSON Validator",
+        description: "Validate JSON and normalize formatting.",
+        route: "/validators/json",
+        metaDescription: "Validate JSON, inspect parser errors, and normalize formatting.",
+      },
+      {
+        id: "toml-validator",
+        label: "TOML Validator",
+        description: "Validate TOML configuration files.",
+        route: "/validators/toml",
+        metaDescription: "Validate TOML and inspect parser-backed configuration errors.",
       },
     ],
   },

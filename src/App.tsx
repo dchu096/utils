@@ -70,11 +70,11 @@ const TOOL_GROUPS: ToolGroup[] = [
       {
         id: "ssh-key-generator",
         label: "SSH Key Generator",
-        description: "Generate browser-based RSA SSH key pairs and copy the outputs.",
+        description: "Generate browser-based ED25519, RSA, and ECDSA SSH key pairs.",
         route: "/encoding/ssh-key",
         component: SshKeyGenerator,
         metaDescription:
-          "Generate RSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key as PEM.",
+          "Generate ED25519, RSA, and ECDSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key as PEM.",
       },
     ],
   },

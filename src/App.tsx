@@ -260,7 +260,7 @@ function ToolDropdown({
   onToggle: () => void;
 }) {
   return (
-    <div className="relative">
+    <div className="relative" data-tool-dropdown="true">
       <button
         type="button"
         onClick={onToggle}
@@ -508,6 +508,23 @@ export default function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      if (!target.closest('[data-tool-dropdown="true"]')) {
+        setOpenMenuTitle(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
   useEffect(() => {

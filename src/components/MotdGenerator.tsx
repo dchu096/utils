@@ -151,16 +151,8 @@ export default function MotdGenerator() {
       <section className="rounded-[24px] border border-slate-800 bg-slate-950/80 p-6 sm:p-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-emerald-300">
-                Live
-              </span>
-              <span className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                Minecraft
-              </span>
-            </div>
-
-            <h2 className="mt-4 text-3xl font-semibold text-white">MOTD Generator</h2>
+            <span className="text-xs uppercase tracking-[0.16em] text-slate-500">Minecraft</span>
+            <h1 className="mt-4 text-3xl font-semibold text-white">MOTD Generator</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
               Build server list MOTDs with legacy codes or MiniMessage tags, preview the result
               live, and copy outputs for the config format you actually need.

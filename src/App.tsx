@@ -7,6 +7,7 @@ import DiscordTimestampGenerator from "./components/DiscordTimestampGenerator";
 import JsonValidator from "./components/JsonValidator";
 import JwtDecoder from "./components/JwtDecoder";
 import MarkdownPreviewer from "./components/MarkdownPreviewer";
+import MotdGenerator from "./components/MotdGenerator";
 import RegexTester from "./components/RegexTester";
 import TimestampGenerator from "./components/TimestampGenerator";
 import TomlValidator from "./components/TomlValidator";
@@ -15,12 +16,12 @@ import YamlValidator from "./components/YamlValidator";
 
 type Tool = {
   aliases?: string[];
-  component: ComponentType;
+  component?: ComponentType;
   description: string;
   id: string;
   label: string;
   metaDescription?: string;
-  route: string;
+  route?: string;
 };
 
 type ToolGroup = {
@@ -125,6 +126,31 @@ const TOOL_GROUPS: ToolGroup[] = [
     ],
   },
   {
+    title: "Minecraft",
+    description: "Formatting helpers for server and chat presentation.",
+    tools: [
+      {
+        id: "motd-generator",
+        label: "MOTD Generator",
+        description: "Build Minecraft server list MOTDs with preview and export formats.",
+        route: "/mcmotd",
+        component: MotdGenerator,
+        metaDescription:
+          "Generate Minecraft MOTDs with live preview, legacy formatting, and MiniMessage output.",
+      },
+      {
+        id: "minimessage-previewer",
+        label: "MiniMessage Previewer",
+        description: "Preview styled MiniMessage syntax and formatting output.",
+      },
+      {
+        id: "minecraft-gradient-text-generator",
+        label: "Minecraft Gradient Text Generator",
+        description: "Generate colorized gradient output for Minecraft text.",
+      },
+    ],
+  },
+  {
     title: "Validators",
     description: "Validation and normalization tools for common config formats.",
     tools: [
@@ -155,6 +181,27 @@ const TOOL_GROUPS: ToolGroup[] = [
         component: TomlValidator,
         metaDescription:
           "Validate TOML and inspect parser-backed configuration errors with normalized output.",
+      },
+    ],
+  },
+  {
+    title: "Design & Creative",
+    description: "Visual helpers for embeds, gradients, and assets.",
+    tools: [
+      {
+        id: "qr-code-generator",
+        label: "QR Code Generator",
+        description: "Generate QR codes from links or text.",
+      },
+      {
+        id: "css-gradient-generator",
+        label: "CSS Gradient Generator",
+        description: "Compose gradients and copy the CSS.",
+      },
+      {
+        id: "discord-embed-builder",
+        label: "Discord Embed Builder",
+        description: "Assemble embeds with live structure previews.",
       },
     ],
   },
@@ -191,7 +238,7 @@ function getToolByPath(pathname: string): { group: ToolGroup; tool: Tool } | nul
   for (const group of TOOL_GROUPS) {
     const tool = group.tools.find(
       (entry) =>
-        normalizePath(entry.route) === normalizedPath ||
+        (entry.route && normalizePath(entry.route) === normalizedPath) ||
         entry.aliases?.some((alias) => normalizePath(alias) === normalizedPath),
     );
 
@@ -210,8 +257,9 @@ function getToolIdFromLocation(): string {
     return matchedTool.tool.id;
   }
 
-  if (normalizePath(window.location.pathname) !== "/") {
-    return HOME_TOOL_ID;
+  if (normalizePath(window.location.pathname) === "/") {
+    const requestedToolId = new URLSearchParams(window.location.search).get("tool");
+    return requestedToolId && getToolById(requestedToolId) ? requestedToolId : HOME_TOOL_ID;
   }
 
   return HOME_TOOL_ID;
@@ -222,7 +270,17 @@ function getUrlForTool(toolId: string): string {
     return "/";
   }
 
-  return getToolById(toolId)?.tool.route ?? "/";
+  const tool = getToolById(toolId)?.tool;
+
+  if (!tool) {
+    return "/";
+  }
+
+  return tool.route ?? `/?tool=${encodeURIComponent(toolId)}`;
+}
+
+function isToolAvailable(tool: Tool): boolean {
+  return Boolean(tool.component);
 }
 
 function setMetaTagContent(name: string, content: string): void {
@@ -293,7 +351,14 @@ function ToolDropdown({
                   }}
                   className="rounded-lg px-3 py-3 text-left transition hover:bg-slate-900"
                 >
-                  <div className="text-sm font-medium text-slate-100">{tool.label}</div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-medium text-slate-100">{tool.label}</div>
+                    {!isToolAvailable(tool) ? (
+                      <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                        Coming soon
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="mt-1 text-xs leading-5 text-slate-400">{tool.description}</p>
                 </a>
               ))}
@@ -321,10 +386,17 @@ function ToolCard({
       }}
       className="rounded-xl border border-slate-800 bg-slate-950/80 px-5 py-5 text-left transition hover:border-slate-700 hover:bg-slate-900"
     >
-      <h3 className="text-base font-semibold text-white">{tool.label}</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-base font-semibold text-white">{tool.label}</h3>
+        {!isToolAvailable(tool) ? (
+          <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">
+            Coming soon
+          </span>
+        ) : null}
+      </div>
       <p className="mt-3 text-sm leading-6 text-slate-400">{tool.description}</p>
       <div className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-        {tool.route}
+        {tool.route ?? "Coming soon"}
       </div>
     </a>
   );
@@ -336,6 +408,8 @@ function HomePage({
   onSelectTool: (toolId: string) => void;
 }) {
   const allTools = useMemo(() => TOOL_GROUPS.flatMap((group) => group.tools), []);
+  const availableTools = useMemo(() => allTools.filter((tool) => isToolAvailable(tool)), [allTools]);
+  const comingSoonTools = useMemo(() => allTools.filter((tool) => !isToolAvailable(tool)), [allTools]);
 
   return (
     <div className="flex flex-col gap-12">
@@ -379,17 +453,27 @@ function HomePage({
         <div className="grid gap-4">
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Available now</p>
-            <p className="mt-3 text-xl font-semibold text-white">{allTools.length} working tools</p>
+            <p className="mt-3 text-xl font-semibold text-white">
+              {availableTools.length} working tools
+            </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              The site now covers validation, encoding, scheduling, and text-formatting workflows
-              without placeholder entries in the active sections.
+              Built pages cover validation, encoding, scheduling, text formatting, and one
+              Minecraft workflow. The remaining category slots stay visible as coming soon.
             </p>
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Direct paths</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Site surface</p>
             <div className="mt-3 grid gap-2 text-sm text-slate-300">
-              {allTools.map((tool) => (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
+                <span>Working pages</span>
+                <span className="font-mono text-xs text-slate-500">{availableTools.length}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
+                <span>Coming soon</span>
+                <span className="font-mono text-xs text-slate-500">{comingSoonTools.length}</span>
+              </div>
+              {availableTools.map((tool) => (
                 <div
                   key={tool.id}
                   className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2"
@@ -420,6 +504,29 @@ function HomePage({
         ))}
       </section>
     </div>
+  );
+}
+
+function PlaceholderToolPage({
+  category,
+  title,
+}: {
+  category: string;
+  title: string;
+}) {
+  return (
+    <section className="rounded-[24px] border border-slate-800 bg-slate-950/80 px-6 py-10 sm:px-8">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">{category}</p>
+      <h1 className="mt-4 text-3xl font-semibold text-white">{title}</h1>
+      <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
+        This page stays in the site structure, but the tool itself is not built yet. It remains
+        listed here as coming soon so the category layout stays stable while the rest of the app
+        continues to grow.
+      </p>
+      <div className="mt-6 inline-flex rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+        Coming soon
+      </div>
+    </section>
   );
 }
 
@@ -474,19 +581,20 @@ export default function App() {
       "description",
       activeTool.tool.metaDescription ?? activeTool.tool.description,
     );
-    setCanonicalHref(activeTool.tool.route);
+    setCanonicalHref(activeTool.tool.route ?? "/");
   }, [activeTool]);
 
   const navigateTo = (toolId: string): void => {
     const nextUrl = getUrlForTool(toolId);
+    const nextLocation = new URL(nextUrl, window.location.origin);
 
     setOpenMenuTitle(null);
     setIsMobileMenuOpen(false);
 
     if (
       toolId === activeToolId &&
-      normalizePath(window.location.pathname) === normalizePath(nextUrl) &&
-      window.location.search === ""
+      normalizePath(window.location.pathname) === normalizePath(nextLocation.pathname) &&
+      window.location.search === nextLocation.search
     ) {
       return;
     }
@@ -566,6 +674,12 @@ export default function App() {
           >
             {activeToolId === HOME_TOOL_ID ? <HomePage onSelectTool={navigateTo} /> : null}
             {activeToolId !== HOME_TOOL_ID && ActiveToolComponent ? <ActiveToolComponent /> : null}
+            {activeToolId !== HOME_TOOL_ID && activeTool && !ActiveToolComponent ? (
+              <PlaceholderToolPage
+                title={activeTool.tool.label}
+                category={activeTool.group.title}
+              />
+            ) : null}
           </motion.div>
         </AnimatePresence>
       </main>

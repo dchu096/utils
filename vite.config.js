@@ -12,6 +12,7 @@ export default defineConfig({
                 encodingUuid: "encoding/uuid/index.html",
                 cron: "cron/index.html",
                 discordTimestamp: "discord-timestamp/index.html",
+                mcmotd: "mcmotd/index.html",
                 textMarkdown: "text/markdown/index.html",
                 textRegex: "text/regex/index.html",
                 timeTimestamp: "time/timestamp/index.html",

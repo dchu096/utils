@@ -7,6 +7,7 @@ import MotdGenerator from "./components/MotdGenerator";
 import YamlValidator from "./components/YamlValidator";
 
 type Tool = {
+  aliases?: string[];
   description: string;
   id: string;
   label: string;
@@ -23,27 +24,43 @@ type ToolGroup = {
 
 const HOME_TOOL_ID = "home";
 const HOME_META_DESCRIPTION =
-  "Utility pages for cron expressions, Discord timestamps, Minecraft MOTDs, and other practical formatting work.";
+  "Utility pages for validators, cron expressions, Discord timestamps, Minecraft MOTDs, and other practical formatting work.";
 
 const TOOL_GROUPS: ToolGroup[] = [
   {
-    title: "Data & Encoding",
-    description: "Converters and structure helpers for payload work.",
+    title: "Validators",
+    description: "Validation and normalization tools for common config formats.",
     tools: [
       {
         id: "yaml-validator",
         label: "YAML Validator",
         description: "Validate YAML, inspect parser issues, and convert to JSON.",
-        route: "/yaml-validator",
+        route: "/validators/yaml",
+        aliases: ["/yaml-validator"],
         status: "live",
         metaDescription:
           "Validate YAML with parser-backed errors, warnings, normalized output, and JSON conversion.",
       },
       {
         id: "json-formatter",
-        label: "JSON Formatter",
-        description: "Pretty-print and validate JSON.",
+        label: "JSON Validator",
+        description: "Validate JSON and normalize formatting.",
+        route: "/validators/json",
+        metaDescription: "Validate JSON, inspect parser errors, and normalize formatting.",
       },
+      {
+        id: "toml-validator",
+        label: "TOML Validator",
+        description: "Validate TOML configuration files.",
+        route: "/validators/toml",
+        metaDescription: "Validate TOML and inspect parser-backed configuration errors.",
+      },
+    ],
+  },
+  {
+    title: "Data & Encoding",
+    description: "Converters, token tools, and ID helpers for payload work.",
+    tools: [
       {
         id: "base64-url-encoder",
         label: "Base64 / URL Encoder",
@@ -189,7 +206,9 @@ function getToolIdFromLocation(): string {
 
   for (const group of TOOL_GROUPS) {
     const match = group.tools.find(
-      (tool) => tool.route && normalizePath(tool.route) === normalizedPath,
+      (tool) =>
+        (tool.route && normalizePath(tool.route) === normalizedPath) ||
+        tool.aliases?.some((alias) => normalizePath(alias) === normalizedPath),
     );
 
     if (match) {
@@ -376,9 +395,9 @@ function HomePage({
             Utility pages for the work people actually do every day
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300">
-            The live tools now sit on dedicated URLs, so YAML validation, cron expressions,
-            Discord timestamps, and Minecraft MOTDs can live as their own pages without breaking
-            the shared site shell.
+            The live tools now sit on dedicated URLs, so validators, cron expressions, Discord
+            timestamps, and Minecraft MOTDs can live as their own pages without breaking the
+            shared site shell.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -393,7 +412,7 @@ function HomePage({
               Open cron generator
             </a>
             <a
-              href="/yaml-validator"
+              href="/validators/yaml"
               onClick={(event) => {
                 event.preventDefault();
                 onSelectTool("yaml-validator");
@@ -409,7 +428,7 @@ function HomePage({
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Live now</p>
             <p className="mt-3 text-xl font-semibold text-white">
-              YAML, cron, Discord timestamp, and MOTD generators
+              YAML validator, cron, Discord timestamp, and MOTD generators
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
               Each live tool now has a dedicated page path for direct linking, refresh-safe access,

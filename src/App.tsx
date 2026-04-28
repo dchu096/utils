@@ -4,7 +4,10 @@ import { Toaster } from "react-hot-toast";
 import Base64UrlEncoder from "./components/Base64UrlEncoder";
 import CronGenerator from "./components/CronGenerator";
 import DiscordTimestampGenerator from "./components/DiscordTimestampGenerator";
+import ExtractPublicFromPrivateKey from "./components/ExtractPublicFromPrivateKey";
+import JwkGenerator from "./components/JwkGenerator";
 import JsonValidator from "./components/JsonValidator";
+import JwkToPemConverter from "./components/JwkToPemConverter";
 import JwtDecoder from "./components/JwtDecoder";
 import MarkdownPreviewer from "./components/MarkdownPreviewer";
 import MotdGenerator from "./components/MotdGenerator";
@@ -66,15 +69,6 @@ const TOOL_GROUPS: ToolGroup[] = [
         component: UuidGenerator,
         metaDescription:
           "Generate UUID v4 values, copy them in batches, and inspect UUID version and variant fields.",
-      },
-      {
-        id: "ssh-key-generator",
-        label: "SSH Key Generator",
-        description: "Generate browser-based ED25519, RSA, and ECDSA SSH key pairs.",
-        route: "/encoding/ssh-key",
-        component: SshKeyGenerator,
-        metaDescription:
-          "Generate ED25519, RSA, and ECDSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key in OpenSSH format.",
       },
     ],
   },
@@ -166,6 +160,48 @@ const TOOL_GROUPS: ToolGroup[] = [
         component: TomlValidator,
         metaDescription:
           "Validate TOML and inspect parser-backed configuration errors with normalized output.",
+      },
+    ],
+  },
+  {
+    title: "Security & PKI",
+    description: "Key utilities for SSH, JWK, and PEM workflows.",
+    tools: [
+      {
+        id: "ssh-key-generator",
+        label: "SSH Key Generator",
+        description: "Generate browser-based ED25519, RSA, and ECDSA SSH key pairs.",
+        route: "/encoding/ssh-key",
+        component: SshKeyGenerator,
+        metaDescription:
+          "Generate ED25519, RSA, and ECDSA SSH key pairs in the browser, copy the OpenSSH public key, and export the private key in OpenSSH format.",
+      },
+      {
+        id: "extract-public-from-private-key",
+        label: "Extract Public Key",
+        description: "Recover the matching public key from supported private key inputs.",
+        route: "/security/extract-public-key",
+        component: ExtractPublicFromPrivateKey,
+        metaDescription:
+          "Extract a public key from supported OpenSSH and PKCS#8 private keys directly in the browser.",
+      },
+      {
+        id: "jwk-generator",
+        label: "JWK Generator",
+        description: "Generate RSA, ECDSA, and Ed25519 key pairs as JWK and PEM output.",
+        route: "/security/jwk-generate",
+        component: JwkGenerator,
+        metaDescription:
+          "Generate browser-side RSA, ECDSA, and Ed25519 key pairs as JWK, PEM, and OpenSSH public output.",
+      },
+      {
+        id: "jwk-to-pem-converter",
+        label: "JWK to PEM Convert",
+        description: "Convert supported JWK inputs into PEM and OpenSSH-compatible output.",
+        route: "/security/jwk-to-pem",
+        component: JwkToPemConverter,
+        metaDescription:
+          "Convert RSA, ECDSA, and Ed25519 JWKs into PEM blocks and OpenSSH-compatible output in the browser.",
       },
     ],
   },

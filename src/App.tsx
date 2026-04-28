@@ -283,6 +283,13 @@ function isToolAvailable(tool: Tool): boolean {
   return Boolean(tool.component);
 }
 
+function getVisibleToolGroups(): ToolGroup[] {
+  return TOOL_GROUPS.map((group) => ({
+    ...group,
+    tools: group.tools.filter((tool) => isToolAvailable(tool)),
+  })).filter((group) => group.tools.length > 0);
+}
+
 function setMetaTagContent(name: string, content: string): void {
   let tag = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
 
@@ -351,14 +358,7 @@ function ToolDropdown({
                   }}
                   className="rounded-lg px-3 py-3 text-left transition hover:bg-slate-900"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-medium text-slate-100">{tool.label}</div>
-                    {!isToolAvailable(tool) ? (
-                      <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                        Coming soon
-                      </span>
-                    ) : null}
-                  </div>
+                  <div className="text-sm font-medium text-slate-100">{tool.label}</div>
                   <p className="mt-1 text-xs leading-5 text-slate-400">{tool.description}</p>
                 </a>
               ))}
@@ -386,17 +386,11 @@ function ToolCard({
       }}
       className="rounded-xl border border-slate-800 bg-slate-950/80 px-5 py-5 text-left transition hover:border-slate-700 hover:bg-slate-900"
     >
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-white">{tool.label}</h3>
-        {!isToolAvailable(tool) ? (
-          <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">
-            Coming soon
-          </span>
-        ) : null}
-      </div>
+      <h3 className="text-base font-semibold text-white">{tool.label}</h3>
       <p className="mt-3 text-sm leading-6 text-slate-400">{tool.description}</p>
-      <div className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-        {tool.route ?? "Coming soon"}
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+        <span>Open tool</span>
+        <span className="font-mono normal-case tracking-normal text-slate-600">{tool.route}</span>
       </div>
     </a>
   );
@@ -407,9 +401,12 @@ function HomePage({
 }: {
   onSelectTool: (toolId: string) => void;
 }) {
-  const allTools = useMemo(() => TOOL_GROUPS.flatMap((group) => group.tools), []);
-  const availableTools = useMemo(() => allTools.filter((tool) => isToolAvailable(tool)), [allTools]);
-  const comingSoonTools = useMemo(() => allTools.filter((tool) => !isToolAvailable(tool)), [allTools]);
+  const visibleGroups = useMemo(() => getVisibleToolGroups(), []);
+  const availableTools = useMemo(
+    () => visibleGroups.flatMap((group) => group.tools),
+    [visibleGroups],
+  );
+  const featuredTools = useMemo(() => availableTools.slice(0, 5), [availableTools]);
 
   return (
     <div className="flex flex-col gap-12">
@@ -419,11 +416,12 @@ function HomePage({
             dchu096.tk
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold text-white sm:text-5xl">
-            Utility pages for the work people actually do every day
+            Practical browser-based utilities for validation, encoding, time, and text work
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300">
-            Validators, encoding helpers, timestamps, cron tools, and text utilities now live on
-            dedicated URLs, so each page can be linked directly without a separate app shell.
+            Open a tool, paste your input, and get a clean result fast. The current set covers
+            JSON, YAML, TOML, JWTs, Base64, UUIDs, cron expressions, timestamps, regex, Markdown,
+            Discord timestamps, and Minecraft MOTDs.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -452,35 +450,32 @@ function HomePage({
 
         <div className="grid gap-4">
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Available now</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Live tools</p>
             <p className="mt-3 text-xl font-semibold text-white">
-              {availableTools.length} working tools
+              {availableTools.length} utilities ready to use
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Built pages cover validation, encoding, scheduling, text formatting, and one
-              Minecraft workflow. The remaining category slots stay visible as coming soon.
+              Direct links are available for common workflows, so teams can bookmark the exact page
+              they need and return to it without extra navigation.
             </p>
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-5">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Site surface</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Featured utilities</p>
             <div className="mt-3 grid gap-2 text-sm text-slate-300">
-              <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
-                <span>Working pages</span>
-                <span className="font-mono text-xs text-slate-500">{availableTools.length}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
-                <span>Coming soon</span>
-                <span className="font-mono text-xs text-slate-500">{comingSoonTools.length}</span>
-              </div>
-              {availableTools.map((tool) => (
-                <div
+              {featuredTools.map((tool) => (
+                <a
                   key={tool.id}
+                  href={getUrlForTool(tool.id)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onSelectTool(tool.id);
+                  }}
                   className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2"
                 >
                   <span>{tool.label}</span>
-                  <span className="font-mono text-xs text-slate-500">{tool.route}</span>
-                </div>
+                  <span className="font-mono text-xs text-slate-500">Open</span>
+                </a>
               ))}
             </div>
           </div>
@@ -488,7 +483,7 @@ function HomePage({
       </section>
 
       <section className="grid gap-6">
-        {TOOL_GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <section key={group.title} className="grid gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-white">{group.title}</h2>
@@ -519,12 +514,11 @@ function PlaceholderToolPage({
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">{category}</p>
       <h1 className="mt-4 text-3xl font-semibold text-white">{title}</h1>
       <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-        This page stays in the site structure, but the tool itself is not built yet. It remains
-        listed here as coming soon so the category layout stays stable while the rest of the app
-        continues to grow.
+        This route is reserved for a future utility. Use the live tools linked from the homepage
+        for validation, encoding, scheduling, and text work.
       </p>
       <div className="mt-6 inline-flex rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-        Coming soon
+        In progress
       </div>
     </section>
   );
@@ -534,6 +528,7 @@ export default function App() {
   const [activeToolId, setActiveToolId] = useState<string>(() => getToolIdFromLocation());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [openMenuTitle, setOpenMenuTitle] = useState<string | null>(null);
+  const visibleGroups = useMemo(() => getVisibleToolGroups(), []);
 
   const activeTool = useMemo(
     () => (activeToolId === HOME_TOOL_ID ? null : getToolById(activeToolId)),
@@ -648,7 +643,7 @@ export default function App() {
           <nav
             className={`${isMobileMenuOpen ? "flex" : "hidden"} flex-col gap-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center`}
           >
-            {TOOL_GROUPS.map((group) => (
+            {visibleGroups.map((group) => (
               <ToolDropdown
                 key={group.title}
                 group={group}

@@ -16,6 +16,7 @@
     "dompurify": "^3.4.1",
     "framer-motion": "^12.9.1",
     "marked": "^18.0.2",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",

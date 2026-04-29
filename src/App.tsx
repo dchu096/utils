@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import Base64UrlEncoder from "./components/Base64UrlEncoder";
+import CssGradientGenerator from "./components/CssGradientGenerator";
 import CronGenerator from "./components/CronGenerator";
 import DiscordWebhookBuilder from "./components/DiscordWebhookBuilder";
 import DiscordTimestampGenerator from "./components/DiscordTimestampGenerator";
@@ -11,8 +12,11 @@ import JsonValidator from "./components/JsonValidator";
 import JwkToPemConverter from "./components/JwkToPemConverter";
 import JwtDecoder from "./components/JwtDecoder";
 import MarkdownPreviewer from "./components/MarkdownPreviewer";
+import MinecraftFlagsGenerator from "./components/MinecraftFlagsGenerator";
+import MinecraftGradientTextGenerator from "./components/MinecraftGradientTextGenerator";
 import MiniMessagePreviewer from "./components/MiniMessagePreviewer";
 import MotdGenerator from "./components/MotdGenerator";
+import QrCodeGenerator from "./components/QrCodeGenerator";
 import RegexTester from "./components/RegexTester";
 import SshKeyGenerator from "./components/SshKeyGenerator";
 import TimestampGenerator from "./components/TimestampGenerator";
@@ -215,11 +219,19 @@ const TOOL_GROUPS: ToolGroup[] = [
         id: "qr-code-generator",
         label: "QR Code Generator",
         description: "Generate QR codes from links or text.",
+        route: "/design/qr-code",
+        component: QrCodeGenerator,
+        metaDescription:
+          "Generate QR codes for links, text, Wi-Fi payloads, and contact cards directly in the browser.",
       },
       {
         id: "css-gradient-generator",
         label: "CSS Gradient Generator",
         description: "Compose gradients and copy the CSS.",
+        route: "/design/css-gradient",
+        component: CssGradientGenerator,
+        metaDescription:
+          "Compose CSS gradients visually and copy the resulting CSS or Tailwind-compatible background class.",
       },
       {
         id: "discord-webhook-builder",
@@ -236,6 +248,15 @@ const TOOL_GROUPS: ToolGroup[] = [
     title: "Minecraft",
     description: "Formatting helpers for server and chat presentation.",
     tools: [
+      {
+        id: "minecraft-flags-generator",
+        label: "Flags Generator",
+        description: "Generate startup scripts with practical JVM flag presets for Minecraft servers.",
+        route: "/minecraft/flags",
+        component: MinecraftFlagsGenerator,
+        metaDescription:
+          "Generate Minecraft startup commands for Pterodactyl, bash, or Windows with Aikar-style flags and memory tuning.",
+      },
       {
         id: "motd-generator",
         label: "MOTD Generator",
@@ -258,6 +279,10 @@ const TOOL_GROUPS: ToolGroup[] = [
         id: "minecraft-gradient-text-generator",
         label: "Minecraft Gradient Text Generator",
         description: "Generate colorized gradient output for Minecraft text.",
+        route: "/minecraft/gradient-text",
+        component: MinecraftGradientTextGenerator,
+        metaDescription:
+          "Generate MiniMessage, ampersand hex, and section-sign hex gradient text output for Minecraft.",
       },
     ],
   },

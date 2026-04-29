@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
+import { SimpleAnalytics } from "@simpleanalytics/react";
 import Base64UrlEncoder from "./components/Base64UrlEncoder";
 import CssGradientGenerator from "./components/CssGradientGenerator";
 import CronGenerator from "./components/CronGenerator";
@@ -752,6 +753,8 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <SimpleAnalytics />
     </div>
   );
 }

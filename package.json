@@ -11,6 +11,7 @@
     "seo": "node scripts/generate-seo.mjs"
   },
   "dependencies": {
+    "@simpleanalytics/react": "^0.0.1",
     "cron-parser": "^5.5.0",
     "cronstrue": "^2.59.0",
     "dompurify": "^3.4.1",

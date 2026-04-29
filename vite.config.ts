@@ -2,8 +2,37 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    {
+      name: "simpleanalytics",
+      transformIndexHtml(html) {
+        const file = mode === "development" ? "latest.dev.js" : "latest.js";
+
+        return {
+          html,
+          tags: [
+            {
+              tag: "script",
+              attrs: {
+                async: true,
+                src: `https://scripts.simpleanalyticscdn.com/${file}`,
+              },
+              injectTo: "head",
+            },
+            {
+              tag: "noscript",
+              children:
+                '<img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" />',
+              injectTo: "body",
+            },
+          ],
+        };
+      },
+    },
+    react(),
+    tailwindcss(),
+  ],
   build: {
     rollupOptions: {
       input: {
@@ -34,4 +63,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

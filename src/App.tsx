@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import Base64UrlEncoder from "./components/Base64UrlEncoder";
 import CronGenerator from "./components/CronGenerator";
+import DiscordWebhookBuilder from "./components/DiscordWebhookBuilder";
 import DiscordTimestampGenerator from "./components/DiscordTimestampGenerator";
 import ExtractPublicFromPrivateKey from "./components/ExtractPublicFromPrivateKey";
 import JwkGenerator from "./components/JwkGenerator";
@@ -10,6 +11,7 @@ import JsonValidator from "./components/JsonValidator";
 import JwkToPemConverter from "./components/JwkToPemConverter";
 import JwtDecoder from "./components/JwtDecoder";
 import MarkdownPreviewer from "./components/MarkdownPreviewer";
+import MiniMessagePreviewer from "./components/MiniMessagePreviewer";
 import MotdGenerator from "./components/MotdGenerator";
 import RegexTester from "./components/RegexTester";
 import SshKeyGenerator from "./components/SshKeyGenerator";
@@ -220,9 +222,13 @@ const TOOL_GROUPS: ToolGroup[] = [
         description: "Compose gradients and copy the CSS.",
       },
       {
-        id: "discord-embed-builder",
-        label: "Discord Embed Builder",
-        description: "Assemble embeds with live structure previews.",
+        id: "discord-webhook-builder",
+        label: "Discord Webhook Builder",
+        description: "Compose webhook payloads, preview embeds, and send test messages.",
+        route: "/discord/webhook",
+        component: DiscordWebhookBuilder,
+        metaDescription:
+          "Build Discord webhook payloads, preview a rich embed, and send test messages directly from the browser.",
       },
     ],
   },
@@ -243,6 +249,10 @@ const TOOL_GROUPS: ToolGroup[] = [
         id: "minimessage-previewer",
         label: "MiniMessage Previewer",
         description: "Preview styled MiniMessage syntax and formatting output.",
+        route: "/minecraft/minimessage",
+        component: MiniMessagePreviewer,
+        metaDescription:
+          "Preview MiniMessage tags in the browser, inspect rendered output, and copy plain text or HTML for Minecraft formatting workflows.",
       },
       {
         id: "minecraft-gradient-text-generator",

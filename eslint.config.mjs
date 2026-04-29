@@ -12,6 +12,12 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
       ecmaVersion: "latest",
